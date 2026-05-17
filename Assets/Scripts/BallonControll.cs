@@ -257,8 +257,8 @@ public class BallonControll : MonoBehaviour
         levelText = CreateHudText(canvas.transform, "LevelText", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -72f), new Vector2(420f, 54f), 26, TextAlignmentOptions.Center, new Color(0.81f, 0.94f, 1f));
         messageText = CreateHudText(canvas.transform, "MessageText", new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 120f), 38, TextAlignmentOptions.Center, Color.white);
 
-        CreatePauseButton(canvas.transform);
         CreatePauseOverlay(canvas.transform);
+        CreatePauseButton(canvas.transform);
     }
 
     private TextMeshProUGUI CreateHudText(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, Vector2 sizeDelta, int fontSize, TextAlignmentOptions alignment, Color color)
@@ -365,7 +365,7 @@ public class BallonControll : MonoBehaviour
             new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(bonusBalloonColor, 1f) },
             new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) }
         );
-        colorOverLifetime.color = gradient;
+        colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
     }
 
     private void PlayPopFeedback(int points)
