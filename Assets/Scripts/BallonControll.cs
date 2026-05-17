@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -49,6 +50,7 @@ public class BallonControll : MonoBehaviour
     private bool isBonusBalloon;
     private bool isPaused;
     private bool isEnding;
+    private int lastPopFrame = -1;
     private Coroutine messageRoutine;
 
     private void Awake()
@@ -62,6 +64,7 @@ public class BallonControll : MonoBehaviour
     private void Start()
     {
         Application.targetFrameRate = 60;
+        Input.multiTouchEnabled = false;
         Time.timeScale = 1f;
 
         score = 0;
@@ -90,6 +93,8 @@ public class BallonControll : MonoBehaviour
             return;
         }
 
+        HandleTouchInput();
+
         if (transform.position.y >= GetWorldTop() + topMissPadding)
         {
             HandleMissedBalloon();
@@ -108,12 +113,12 @@ public class BallonControll : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (isPaused || isEnding)
+        if (isPaused || isEnding || IsPointerOverUi(-1))
         {
             return;
         }
 
-        PopBalloon();
+        TryPopBalloon();
     }
 
     private void OnDisable()
@@ -152,6 +157,71 @@ public class BallonControll : MonoBehaviour
         PlayPopFeedback(points);
         ResetPosition();
         UpdateHud();
+    }
+
+    private void TryPopBalloon()
+    {
+        if (lastPopFrame == Time.frameCount)
+        {
+            return;
+        }
+
+        lastPopFrame = Time.frameCount;
+        PopBalloon();
+    }
+
+    private void HandleTouchInput()
+    {
+        for (int index = 0; index < Input.touchCount; index++)
+        {
+            Touch touch = Input.GetTouch(index);
+            if (touch.phase != TouchPhase.Began || IsPointerOverUi(touch.fingerId))
+            {
+                continue;
+            }
+
+            if (IsBalloonAtScreenPosition(touch.position))
+            {
+                TryPopBalloon();
+                break;
+            }
+        }
+    }
+
+    private bool IsBalloonAtScreenPosition(Vector2 screenPosition)
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera == null)
+        {
+            return false;
+        }
+
+        Ray ray = mainCamera.ScreenPointToRay(screenPosition);
+        RaycastHit2D rayHit = Physics2D.GetRayIntersection(ray);
+        if (rayHit.collider != null)
+        {
+            return rayHit.collider.transform == transform || rayHit.collider.transform.IsChildOf(transform);
+        }
+
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(screenPosition);
+        Collider2D overlapHit = Physics2D.OverlapPoint(worldPosition);
+        return overlapHit != null && (overlapHit.transform == transform || overlapHit.transform.IsChildOf(transform));
+    }
+
+    private bool IsPointerOverUi(int pointerId)
+    {
+        if (EventSystem.current == null)
+        {
+            return false;
+        }
+
+        return pointerId >= 0
+            ? EventSystem.current.IsPointerOverGameObject(pointerId)
+            : EventSystem.current.IsPointerOverGameObject();
     }
 
     private void HandleMissedBalloon()
@@ -242,23 +312,26 @@ public class BallonControll : MonoBehaviour
         scaler.referenceResolution = new Vector2(1080f, 1920f);
         scaler.matchWidthOrHeight = 0.5f;
 
+        Transform safeAreaRoot = MobileSafeArea.GetOrCreateSafeAreaRoot(canvas.transform);
+
         if (scoreText == null)
         {
-            scoreText = CreateHudText(canvas.transform, "ScoreText", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(42f, -44f), new Vector2(420f, 72f), 40, TextAlignmentOptions.Left, Color.white);
+            scoreText = CreateHudText(safeAreaRoot, "ScoreText", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(42f, -44f), new Vector2(420f, 72f), 40, TextAlignmentOptions.Left, Color.white);
         }
         else
         {
+            scoreText.transform.SetParent(safeAreaRoot, false);
             ConfigureHudText(scoreText, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(42f, -44f), new Vector2(420f, 72f), 40, TextAlignmentOptions.Left, Color.white);
         }
 
-        livesText = CreateHudText(canvas.transform, "LivesText", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(42f, -112f), new Vector2(420f, 58f), 30, TextAlignmentOptions.Left, new Color(1f, 0.87f, 0.38f));
-        bestText = CreateHudText(canvas.transform, "BestScoreText", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-42f, -44f), new Vector2(460f, 72f), 32, TextAlignmentOptions.Right, Color.white);
-        comboText = CreateHudText(canvas.transform, "ComboText", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -126f), new Vector2(560f, 58f), 30, TextAlignmentOptions.Center, new Color(1f, 0.56f, 0.92f));
-        levelText = CreateHudText(canvas.transform, "LevelText", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -72f), new Vector2(420f, 54f), 26, TextAlignmentOptions.Center, new Color(0.81f, 0.94f, 1f));
-        messageText = CreateHudText(canvas.transform, "MessageText", new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 120f), 38, TextAlignmentOptions.Center, Color.white);
+        livesText = CreateHudText(safeAreaRoot, "LivesText", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(42f, -112f), new Vector2(420f, 58f), 30, TextAlignmentOptions.Left, new Color(1f, 0.87f, 0.38f));
+        bestText = CreateHudText(safeAreaRoot, "BestScoreText", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-42f, -44f), new Vector2(460f, 72f), 32, TextAlignmentOptions.Right, Color.white);
+        comboText = CreateHudText(safeAreaRoot, "ComboText", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -126f), new Vector2(560f, 58f), 30, TextAlignmentOptions.Center, new Color(1f, 0.56f, 0.92f));
+        levelText = CreateHudText(safeAreaRoot, "LevelText", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -72f), new Vector2(420f, 54f), 26, TextAlignmentOptions.Center, new Color(0.81f, 0.94f, 1f));
+        messageText = CreateHudText(safeAreaRoot, "MessageText", new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 120f), 38, TextAlignmentOptions.Center, Color.white);
 
-        CreatePauseOverlay(canvas.transform);
-        CreatePauseButton(canvas.transform);
+        CreatePauseOverlay(safeAreaRoot);
+        CreatePauseButton(safeAreaRoot);
     }
 
     private TextMeshProUGUI CreateHudText(Transform parent, string objectName, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, Vector2 sizeDelta, int fontSize, TextAlignmentOptions alignment, Color color)

@@ -102,12 +102,14 @@ public class MainMenu : MonoBehaviour
         }
 
         EnsureScaler(canvas);
-        CreatePanel(canvas.transform);
+        Transform safeAreaRoot = MobileSafeArea.GetOrCreateSafeAreaRoot(canvas.transform);
+        CreatePanel(safeAreaRoot);
 
         string bestScore = "BEST SCORE: " + GameSessionStats.BestScore;
         string gamesPlayed = "RUNS PLAYED: " + GameSessionStats.GamesPlayed;
-        CreateText(canvas.transform, "BestScore", bestScore + "\n" + gamesPlayed, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(720f, 120f), 30, TextAnchor.MiddleCenter, Color.white);
-        CreateText(canvas.transform, "HowToPlay", "Tap balloons quickly, chain combos, catch golden bonus balloons, and survive with 3 lives.", new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 120f), 26, TextAnchor.MiddleCenter, new Color(0.95f, 0.98f, 1f));
+        CreateText(safeAreaRoot, "BestScore", bestScore + "\n" + gamesPlayed, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(720f, 120f), 30, TextAnchor.MiddleCenter, Color.white);
+        CreateText(safeAreaRoot, "HowToPlay", "Tap balloons quickly, chain combos, catch golden bonus balloons, and survive with 3 lives.", new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.18f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 120f), 26, TextAnchor.MiddleCenter, new Color(0.95f, 0.98f, 1f));
+        CreateText(safeAreaRoot, "MobileReady", "MOBILE READY: iPhone safe area + Android touch controls", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 42f), new Vector2(760f, 60f), 22, TextAnchor.MiddleCenter, new Color(0.81f, 0.94f, 1f));
     }
 
     private void EnsureScaler(Canvas canvas)

@@ -104,7 +104,8 @@ public class GameOverScreen : MonoBehaviour
         }
 
         EnsureScaler(canvas);
-        CreatePanel(canvas.transform);
+        Transform safeAreaRoot = MobileSafeArea.GetOrCreateSafeAreaRoot(canvas.transform);
+        CreatePanel(safeAreaRoot);
 
         int lastScore = GameSessionStats.LastScore;
         int bestScore = GameSessionStats.BestScore;
@@ -112,8 +113,8 @@ public class GameOverScreen : MonoBehaviour
         string headline = GameSessionStats.LastWasBest ? "NEW BEST RUN!" : GetEncouragement(lastScore);
         string resultText = headline + "\nSCORE: " + lastScore + "\nBEST: " + bestScore + "\nBEST COMBO: x" + bestStreak;
 
-        CreateText(canvas.transform, "ResultsText", resultText, new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 260f), 34, TextAnchor.MiddleCenter, Color.white);
-        CreateText(canvas.transform, "RetryTip", "Tip: keep pops inside the combo window to multiply every point.", new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 100f), 24, TextAnchor.MiddleCenter, new Color(0.95f, 0.98f, 1f));
+        CreateText(safeAreaRoot, "ResultsText", resultText, new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.56f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 260f), 34, TextAnchor.MiddleCenter, Color.white);
+        CreateText(safeAreaRoot, "RetryTip", "Tip: keep pops inside the combo window to multiply every point.", new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(860f, 100f), 24, TextAnchor.MiddleCenter, new Color(0.95f, 0.98f, 1f));
     }
 
     private string GetEncouragement(int lastScore)
