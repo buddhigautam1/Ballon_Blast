@@ -1,26 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameOver : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [SerializeField] private Text pointsText;
 
-    // Update is called once per frame
-    void Update()
+    private void OnEnable()
     {
-        
+        Setup(GameSessionStats.LastScore);
     }
-    public Text pointsText;
 
     public void Setup(int score)
     {
         gameObject.SetActive(true);
-        pointsText.text = score.ToString() + "POINTS";
+        if (pointsText != null)
+        {
+            pointsText.text = score + " POINTS";
+        }
     }
 }
